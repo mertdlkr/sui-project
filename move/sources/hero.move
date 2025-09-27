@@ -19,6 +19,13 @@ public struct HeroMetadata has key, store {
 
 #[allow(lint(self_transfer))]
 public fun create_hero(name: String, image_url: String, power: u64, ctx: &mut TxContext) {
+    let hero = Hero {
+        id: object::new(ctx),
+        name,
+        image_url,
+        power,
+    };
+    transfer::transfer(hero, tx_context::sender(ctx));
     
     // TODO: Create a new Hero struct with the given parameters
         // Hints:
@@ -29,6 +36,7 @@ public fun create_hero(name: String, image_url: String, power: u64, ctx: &mut Tx
         // Hints:
         // Use ctx.epoch_timestamp_ms() for timestamp
     //TODO: Use transfer::freeze_object() to make metadata immutable
+
 }
 
 // ========= GETTER FUNCTIONS =========
