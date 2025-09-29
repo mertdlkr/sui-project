@@ -1,8 +1,10 @@
 module challenge::arena;
 
-use challenge::hero::{self, Hero};
+use challenge::hero;
+use challenge::hero::Hero;
 use sui::event;
-use sui::object::{self, ID, UID};
+use sui::object;
+use sui::object::{ID, UID};
 use sui::transfer;
 use sui::tx_context::TxContext;
 
@@ -52,16 +54,16 @@ public fun battle(hero: Hero, arena: Arena, ctx: &mut TxContext) {
     let timestamp = ctx.epoch_timestamp_ms();
 
     if (hero_power >= warrior_power) {
-        transfer::transfer(warrior, ctx.sender());
-        transfer::transfer(hero, ctx.sender());
+        transfer::public_transfer(warrior, ctx.sender());
+        transfer::public_transfer(hero, ctx.sender());
         event::emit(ArenaCompleted {
             winner_hero_id: hero_id,
             loser_hero_id: warrior_id,
             timestamp,
         });
     } else {
-        transfer::transfer(hero, owner);
-        transfer::transfer(warrior, owner);
+        transfer::public_transfer(hero, owner);
+        transfer::public_transfer(warrior, owner);
         event::emit(ArenaCompleted {
             winner_hero_id: warrior_id,
             loser_hero_id: hero_id,

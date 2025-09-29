@@ -1,9 +1,11 @@
 module challenge::marketplace;
 
 use challenge::hero::Hero;
-use sui::coin::{Self, Coin};
+use sui::coin as coin;
+use sui::coin::Coin;
 use sui::event;
-use sui::object::{self, ID, UID};
+use sui::object;
+use sui::object::{ID, UID};
 use sui::sui::SUI;
 use sui::transfer;
 use sui::tx_context::TxContext;
@@ -78,7 +80,7 @@ public fun buy_hero(list_hero: ListHero, coin: Coin<SUI>, ctx: &mut TxContext) {
 
     transfer::public_transfer(coin, seller);
     let buyer = ctx.sender();
-    transfer::transfer(nft, buyer);
+    transfer::public_transfer(nft, buyer);
 
     event::emit(HeroBought {
         list_hero_id: object::uid_to_inner(&id),
@@ -95,7 +97,7 @@ public fun buy_hero(list_hero: ListHero, coin: Coin<SUI>, ctx: &mut TxContext) {
 
 public fun delist(_: &AdminCap, list_hero: ListHero) {
     let ListHero { id, nft, price: _, seller } = list_hero;
-    transfer::transfer(nft, seller);
+    transfer::public_transfer(nft, seller);
     object::delete(id);
 }
 
@@ -117,5 +119,5 @@ public fun test_init(ctx: &mut TxContext) {
     let admin_cap = AdminCap {
         id: object::new(ctx),
     };
-    transfer::transfer(admin_cap, ctx.sender());
+    transfer::public_transfer(admin_cap, ctx.sender());
 }

@@ -2,7 +2,8 @@ module challenge::hero;
 
 use std::string::String;
 use sui::event;
-use sui::object::{self, ID, UID};
+use sui::object;
+use sui::object::{ID, UID};
 use sui::transfer;
 use sui::tx_context::TxContext;
 
@@ -35,7 +36,7 @@ public fun create_hero(name: String, image_url: String, power: u64, ctx: &mut Tx
         power,
     };
     let hero_id = object::id(&hero);
-    transfer::transfer(hero, ctx.sender());
+    transfer::public_transfer(hero, ctx.sender());
 
     let timestamp = ctx.epoch_timestamp_ms();
     let metadata = HeroMetadata {
