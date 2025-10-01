@@ -5,17 +5,18 @@ import {
   useSuiClient,
 } from "@mysten/dapp-kit";
 import {
+  Badge,
+  Box,
+  Button,
+  Card,
   Flex,
   Heading,
-  Text,
-  Card,
-  Grid,
-  Button,
-  TextField,
-  Badge,
   Tabs,
+  Text,
+  TextField,
 } from "@radix-ui/themes";
 import { useState } from "react";
+import type { CSSProperties } from "react";
 import { useNetworkVariable } from "../networkConfig";
 import { Hero } from "../types/hero";
 import { transferHero } from "../utility/helpers/transfer_hero";
@@ -157,9 +158,25 @@ export function OwnedObjects({ refreshKey, setRefreshKey }: RefreshProps) {
     );
   };
 
+  const baseCardStyle: CSSProperties = {
+    padding: "28px",
+    borderRadius: "20px",
+    border: "1px solid rgba(255, 255, 255, 0.07)",
+    backgroundColor: "rgba(9, 13, 27, 0.78)",
+    backdropFilter: "blur(18px)",
+    boxShadow: "0 24px 80px rgba(15, 23, 42, 0.35)",
+  };
+
+  const heroCardStyle: CSSProperties = {
+    ...baseCardStyle,
+    padding: "0",
+    overflow: "hidden",
+    border: "1px solid rgba(255, 255, 255, 0.09)",
+  };
+
   if (!account) {
     return (
-      <Card>
+      <Card style={baseCardStyle}>
         <Text>Please connect your wallet to see your heroes</Text>
       </Card>
     );
@@ -167,7 +184,7 @@ export function OwnedObjects({ refreshKey, setRefreshKey }: RefreshProps) {
 
   if (error) {
     return (
-      <Card>
+      <Card style={baseCardStyle}>
         <Text color="red">Error: {error.message}</Text>
       </Card>
     );
@@ -175,7 +192,7 @@ export function OwnedObjects({ refreshKey, setRefreshKey }: RefreshProps) {
 
   if (isPending || !data) {
     return (
-      <Card>
+      <Card style={baseCardStyle}>
         <Text>Loading your heroes...</Text>
       </Card>
     );
@@ -187,152 +204,180 @@ export function OwnedObjects({ refreshKey, setRefreshKey }: RefreshProps) {
 
   return (
     <Flex direction="column" gap="4">
-      <Heading size="6">Your Heroes ({heroes.length})</Heading>
+      <Flex align={{ initial: "start", sm: "center" }} justify="between">
+        <Flex direction="column" gap="1">
+          <Heading size="5">Your Heroes</Heading>
+          <Text size="2" color="gray">
+            Manage, transfer, list, or deploy your champions into arenas.
+          </Text>
+        </Flex>
+        <Badge color="blue" size="2">
+          {heroes.length} total
+        </Badge>
+      </Flex>
 
       {heroes.length === 0 ? (
-        <Card>
+        <Card style={baseCardStyle}>
           <Text>No heroes found in your wallet</Text>
         </Card>
       ) : (
-        <Grid columns="3" gap="4">
+        <Box
+          style={{
+            display: "grid",
+            gap: "28px",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          }}
+        >
           {heroes.map((obj) => {
             const hero = obj.data?.content as any;
             const heroId = obj.data?.objectId!;
             const fields = hero.fields as Hero;
 
             return (
-              <Card key={heroId} style={{ padding: "16px" }}>
-                <Flex direction="column" gap="3">
-                  {/* Hero Image */}
-                  <img
-                    src={fields.image_url}
-                    alt={fields.name}
-                    style={{
-                      width: "100%",
-                      height: "200px",
-                      objectFit: "cover",
-                      borderRadius: "8px",
-                    }}
-                  />
-
-                  {/* Hero Info */}
-                  <Flex direction="column" gap="2">
-                    <Text size="5" weight="bold">
-                      {fields.name}
-                    </Text>
-                    <Badge color="blue" size="2">
-                      Power: {fields.power}
+              <Card key={heroId} style={heroCardStyle}>
+                <Flex direction="column" gap="0">
+                  <Box style={{ position: "relative" }}>
+                    <img
+                      src={fields.image_url}
+                      alt={fields.name}
+                      style={{
+                        width: "100%",
+                        height: "220px",
+                        objectFit: "cover",
+                      }}
+                    />
+                    <Badge
+                      color="blue"
+                      size="2"
+                      style={{
+                        position: "absolute",
+                        top: "16px",
+                        left: "16px",
+                      }}
+                    >
+                      Power {fields.power}
                     </Badge>
+                  </Box>
 
-                    <Flex align="center" gap="2">
-                      <Text
-                        size="3"
-                        color="gray"
-                        style={{
-                          fontFamily: "monospace",
-                        }}
-                      >
-                        {heroId.slice(0, 6)}...{heroId.slice(-6)}
-                      </Text>
-                      <Button
-                        size="1"
-                        variant="ghost"
-                        onClick={() => copyToClipboard(heroId, heroId)}
-                        color={copiedStates[heroId] ? "green" : undefined}
-                      >
-                        {copiedStates[heroId] ? "Copied!" : "Copy"}
-                      </Button>
-                    </Flex>
-                  </Flex>
-
-                  {/* Action Tabs */}
-                  <Tabs.Root defaultValue="transfer">
-                    <Tabs.List size="2">
-                      <Tabs.Trigger value="transfer">Transfer</Tabs.Trigger>
-                      <Tabs.Trigger value="list">List for Sale</Tabs.Trigger>
-                      <Tabs.Trigger value="battle">Battle</Tabs.Trigger>
-                    </Tabs.List>
-
-                    <Tabs.Content value="transfer">
-                      <Flex direction="column" gap="2" mt="3">
-                        <TextField.Root
-                          placeholder="Recipient address"
-                          value={transferAddress[heroId] || ""}
-                          onChange={(e) =>
-                            setTransferAddress((prev) => ({
-                              ...prev,
-                              [heroId]: e.target.value,
-                            }))
-                          }
-                        />
-                        <Button
-                          onClick={() =>
-                            handleTransfer(heroId, transferAddress[heroId])
-                          }
-                          disabled={
-                            !transferAddress[heroId]?.trim() ||
-                            isTransferring[heroId]
-                          }
-                          loading={isTransferring[heroId]}
-                          color="blue"
+                  <Flex direction="column" gap="3" style={{ padding: "20px" }}>
+                    <Flex direction="column" gap="2">
+                      <Heading size="4">{fields.name}</Heading>
+                      <Flex align="center" gap="2">
+                        <Text
+                          size="2"
+                          color="gray"
+                          style={{ fontFamily: "monospace" }}
                         >
-                          {isTransferring[heroId]
-                            ? "Transferring..."
-                            : "Transfer Hero"}
-                        </Button>
-                      </Flex>
-                    </Tabs.Content>
-
-                    <Tabs.Content value="list">
-                      <Flex direction="column" gap="2" mt="3">
-                        <TextField.Root
-                          placeholder="Price in SUI"
-                          type="number"
-                          value={listPrice[heroId] || ""}
-                          onChange={(e) =>
-                            setListPrice((prev) => ({
-                              ...prev,
-                              [heroId]: e.target.value,
-                            }))
-                          }
-                        />
-                        <Button
-                          onClick={() => handleList(heroId, listPrice[heroId])}
-                          disabled={
-                            !listPrice[heroId]?.trim() || isListing[heroId]
-                          }
-                          loading={isListing[heroId]}
-                          color="green"
-                        >
-                          {isListing[heroId] ? "Listing..." : "List for Sale"}
-                        </Button>
-                      </Flex>
-                    </Tabs.Content>
-
-                    <Tabs.Content value="battle">
-                      <Flex direction="column" gap="2" mt="3">
-                        <Text size="2" color="gray">
-                          Create a battle place for other players to challenge
-                          your hero.
+                          {heroId.slice(0, 6)}...{heroId.slice(-6)}
                         </Text>
                         <Button
-                          onClick={() => handleCreateBattle(heroId)}
-                          disabled={isCreatingBattle[heroId]}
-                          loading={isCreatingBattle[heroId]}
-                          color="orange"
+                          size="1"
+                          variant="soft"
+                          color={copiedStates[heroId] ? "green" : "gray"}
+                          onClick={() => copyToClipboard(heroId, heroId)}
                         >
-                          {isCreatingBattle[heroId]
-                            ? "Creating Arena..."
-                            : "Create Arena"}
+                          {copiedStates[heroId] ? "Copied" : "Copy"}
                         </Button>
                       </Flex>
-                    </Tabs.Content>
-                  </Tabs.Root>
+                    </Flex>
+
+                    <Tabs.Root defaultValue="transfer">
+                      <Tabs.List
+                        size="2"
+                        style={{
+                          backgroundColor: "rgba(15, 23, 42, 0.45)",
+                          borderRadius: "12px",
+                          padding: "4px",
+                        }}
+                      >
+                        <Tabs.Trigger value="transfer">Transfer</Tabs.Trigger>
+                        <Tabs.Trigger value="list">List</Tabs.Trigger>
+                        <Tabs.Trigger value="battle">Battle</Tabs.Trigger>
+                      </Tabs.List>
+
+                      <Tabs.Content value="transfer">
+                        <Flex direction="column" gap="2" mt="3">
+                          <TextField.Root
+                            placeholder="Recipient address"
+                            value={transferAddress[heroId] || ""}
+                            onChange={(e) =>
+                              setTransferAddress((prev) => ({
+                                ...prev,
+                                [heroId]: e.target.value,
+                              }))
+                            }
+                            size="3"
+                          />
+                          <Button
+                            onClick={() =>
+                              handleTransfer(heroId, transferAddress[heroId])
+                            }
+                            disabled={
+                              !transferAddress[heroId]?.trim() ||
+                              isTransferring[heroId]
+                            }
+                            loading={isTransferring[heroId]}
+                            color="blue"
+                          >
+                            {isTransferring[heroId]
+                              ? "Transferring..."
+                              : "Transfer Hero"}
+                          </Button>
+                        </Flex>
+                      </Tabs.Content>
+
+                      <Tabs.Content value="list">
+                        <Flex direction="column" gap="2" mt="3">
+                          <TextField.Root
+                            placeholder="Price in SUI"
+                            type="number"
+                            value={listPrice[heroId] || ""}
+                            onChange={(e) =>
+                              setListPrice((prev) => ({
+                                ...prev,
+                                [heroId]: e.target.value,
+                              }))
+                            }
+                            size="3"
+                          />
+                          <Button
+                            onClick={() => handleList(heroId, listPrice[heroId])}
+                            disabled={
+                              !listPrice[heroId]?.trim() || isListing[heroId]
+                            }
+                            loading={isListing[heroId]}
+                            color="green"
+                          >
+                            {isListing[heroId] ? "Listing..." : "List for Sale"}
+                          </Button>
+                        </Flex>
+                      </Tabs.Content>
+
+                      <Tabs.Content value="battle">
+                        <Flex direction="column" gap="2" mt="3">
+                          <Text size="2" color="gray">
+                            Create a battle place for other players to
+                            challenge your hero.
+                          </Text>
+                          <Button
+                            onClick={() => handleCreateBattle(heroId)}
+                            disabled={isCreatingBattle[heroId]}
+                            loading={isCreatingBattle[heroId]}
+                            color="orange"
+                          >
+                            {isCreatingBattle[heroId]
+                              ? "Creating Arena..."
+                              : "Create Arena"}
+                          </Button>
+                        </Flex>
+                      </Tabs.Content>
+                    </Tabs.Root>
+                  </Flex>
                 </Flex>
               </Card>
             );
           })}
-        </Grid>
+        </Box>
       )}
     </Flex>
   );

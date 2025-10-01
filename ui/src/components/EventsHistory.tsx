@@ -1,5 +1,6 @@
 import { useSuiClientQueries } from "@mysten/dapp-kit";
-import { Flex, Heading, Text, Card, Badge, Grid } from "@radix-ui/themes";
+import { Badge, Box, Card, Flex, Heading, Text } from "@radix-ui/themes";
+import type { CSSProperties } from "react";
 import { useNetworkVariable } from "../networkConfig";
 
 export default function EventsHistory() {
@@ -77,6 +78,22 @@ export default function EventsHistory() {
     return (Number(price) / 1_000_000_000).toFixed(2);
   };
 
+  const baseCardStyle: CSSProperties = {
+    padding: "28px",
+    borderRadius: "20px",
+    border: "1px solid rgba(255, 255, 255, 0.07)",
+    backgroundColor: "rgba(9, 13, 27, 0.78)",
+    backdropFilter: "blur(18px)",
+    boxShadow: "0 24px 80px rgba(15, 23, 42, 0.35)",
+  };
+
+  const eventCardStyle: CSSProperties = {
+    padding: "20px",
+    borderRadius: "16px",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
+    backgroundColor: "rgba(13, 18, 32, 0.7)",
+  };
+
   if (
     isListedPending ||
     isBoughtPending ||
@@ -84,7 +101,7 @@ export default function EventsHistory() {
     isBattleCompletedPending
   ) {
     return (
-      <Card>
+      <Card style={baseCardStyle}>
         <Text>Loading events history...</Text>
       </Card>
     );
@@ -111,21 +128,37 @@ export default function EventsHistory() {
 
   return (
     <Flex direction="column" gap="4">
-      <Heading size="6">Recent Events ({allEvents.length})</Heading>
+      <Flex align={{ initial: "start", sm: "center" }} justify="between">
+        <Flex direction="column" gap="1">
+          <Heading size="5">Recent Events</Heading>
+          <Text size="2" color="gray">
+            Follow every listing, sale, and battle conclusion as it happens.
+          </Text>
+        </Flex>
+        <Badge color="blue" size="2">
+          {allEvents.length} events
+        </Badge>
+      </Flex>
 
       {allEvents.length === 0 ? (
-        <Card>
+        <Card style={baseCardStyle}>
           <Text>No events found</Text>
         </Card>
       ) : (
-        <Grid columns="1" gap="3">
+        <Box
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "18px",
+          }}
+        >
           {allEvents.map((event, index) => {
             const eventData = event.parsedJson as any;
 
             return (
               <Card
                 key={`${event.id.txDigest}-${index}`}
-                style={{ padding: "16px" }}
+                style={eventCardStyle}
               >
                 <Flex direction="column" gap="2">
                   <Flex align="center" gap="3">
@@ -149,7 +182,7 @@ export default function EventsHistory() {
                             ? "Arena Created"
                             : "Battle Completed"}
                     </Badge>
-                    <Text size="3" color="gray">
+                    <Text size="2" color="gray">
                       {formatTimestamp(event.timestampMs!)}
                     </Text>
                   </Flex>
@@ -157,23 +190,23 @@ export default function EventsHistory() {
                   <Flex align="center" gap="4" wrap="wrap">
                     {(event.type === "listed" || event.type === "bought") && (
                       <>
-                        <Text size="3">
+                        <Text size="2">
                           <strong>Price:</strong> {formatPrice(eventData.price)}{" "}
                           SUI
                         </Text>
 
                         {event.type === "listed" ? (
-                          <Text size="3">
+                          <Text size="2">
                             <strong>Seller:</strong>{" "}
                             {formatAddress(eventData.seller)}
                           </Text>
                         ) : (
                           <Flex gap="4">
-                            <Text size="3">
+                            <Text size="2">
                               <strong>Buyer:</strong>{" "}
                               {formatAddress(eventData.buyer)}
                             </Text>
-                            <Text size="3">
+                            <Text size="2">
                               <strong>Seller:</strong>{" "}
                               {formatAddress(eventData.seller)}
                             </Text>
@@ -181,7 +214,7 @@ export default function EventsHistory() {
                         )}
 
                         <Text
-                          size="3"
+                          size="2"
                           color="gray"
                           style={{ fontFamily: "monospace" }}
                         >
@@ -192,11 +225,11 @@ export default function EventsHistory() {
 
                     {event.type === "battle_created" && (
                       <>
-                        <Text size="3">
+                        <Text size="2">
                           <strong>⚔️ Battle Arena Created</strong>
                         </Text>
                         <Text
-                          size="3"
+                          size="2"
                           color="gray"
                           style={{ fontFamily: "monospace" }}
                         >
@@ -207,11 +240,11 @@ export default function EventsHistory() {
 
                     {event.type === "battle_completed" && (
                       <>
-                        <Text size="3">
+                        <Text size="2">
                           <strong>🏆 Winner:</strong> ...
                           {eventData.winner_hero_id.slice(-8)}
                         </Text>
-                        <Text size="3">
+                        <Text size="2">
                           <strong>💀 Loser:</strong> ...
                           {eventData.loser_hero_id.slice(-8)}
                         </Text>
@@ -222,7 +255,7 @@ export default function EventsHistory() {
               </Card>
             );
           })}
-        </Grid>
+        </Box>
       )}
     </Flex>
   );

@@ -5,15 +5,16 @@ import {
   useSuiClient,
 } from "@mysten/dapp-kit";
 import {
+  Badge,
+  Box,
+  Button,
+  Card,
   Flex,
   Heading,
   Text,
-  Card,
-  Grid,
-  Button,
-  Badge,
 } from "@radix-ui/themes";
 import { useState } from "react";
+import type { CSSProperties } from "react";
 import { useNetworkVariable } from "../networkConfig";
 import { Hero, Arena } from "../types/hero";
 import { battle } from "../utility/arena/battle";
@@ -122,9 +123,25 @@ export default function Arenas({ refreshKey, setRefreshKey }: RefreshProps) {
     );
   };
 
+  const baseCardStyle: CSSProperties = {
+    padding: "28px",
+    borderRadius: "20px",
+    border: "1px solid rgba(255, 255, 255, 0.07)",
+    backgroundColor: "rgba(9, 13, 27, 0.78)",
+    backdropFilter: "blur(18px)",
+    boxShadow: "0 24px 80px rgba(15, 23, 42, 0.35)",
+  };
+
+  const arenaCardStyle: CSSProperties = {
+    ...baseCardStyle,
+    padding: "0",
+    border: "1px solid rgba(255, 255, 255, 0.09)",
+    overflow: "hidden",
+  };
+
   if (error) {
     return (
-      <Card>
+      <Card style={baseCardStyle}>
         <Text color="red">Error loading arenas: {error.message}</Text>
       </Card>
     );
@@ -132,7 +149,7 @@ export default function Arenas({ refreshKey, setRefreshKey }: RefreshProps) {
 
   if (eventsLoading || isPending || !data) {
     return (
-      <Card>
+      <Card style={baseCardStyle}>
         <Text>Loading arenas...</Text>
       </Card>
     );
@@ -141,8 +158,13 @@ export default function Arenas({ refreshKey, setRefreshKey }: RefreshProps) {
   if (!battleEvents?.data?.length) {
     return (
       <Flex direction="column" gap="4">
-        <Heading size="6">Battle Arena (0)</Heading>
-        <Card>
+        <Flex align={{ initial: "start", sm: "center" }} justify="between">
+          <Heading size="5">Battle Arena</Heading>
+          <Badge color="orange" size="2">
+            0 arenas
+          </Badge>
+        </Flex>
+        <Card style={baseCardStyle}>
           <Text>No arenas are currently available</Text>
         </Card>
       </Flex>
@@ -159,16 +181,26 @@ export default function Arenas({ refreshKey, setRefreshKey }: RefreshProps) {
 
   return (
     <Flex direction="column" gap="4">
-      <Heading size="6">Battle Arena ({activeArenas.length})</Heading>
+      <Flex align={{ initial: "start", sm: "center" }} justify="between">
+        <Flex direction="column" gap="1">
+          <Heading size="5">Battle Arena</Heading>
+          <Text size="2" color="gray">
+            Challenge rival champions or defend your arenas for prestige.
+          </Text>
+        </Flex>
+        <Badge color="orange" size="2">
+          {activeArenas.length} active
+        </Badge>
+      </Flex>
 
       {!account && (
-        <Card>
+        <Card style={baseCardStyle}>
           <Text>Please connect your wallet to participate in battles</Text>
         </Card>
       )}
 
       {account && availableHeroes.length === 0 && (
-        <Card>
+        <Card style={baseCardStyle}>
           <Text color="orange">
             You need heroes to participate in battles. Create some heroes first!
           </Text>
@@ -176,11 +208,17 @@ export default function Arenas({ refreshKey, setRefreshKey }: RefreshProps) {
       )}
 
       {activeArenas.length === 0 ? (
-        <Card>
+        <Card style={baseCardStyle}>
           <Text>No active arenas found</Text>
         </Card>
       ) : (
-        <Grid columns="3" gap="4">
+        <Box
+          style={{
+            display: "grid",
+            gap: "28px",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          }}
+        >
           {activeArenas.map((obj) => {
             const arena = obj.data?.content as any;
             const arenaId = obj.data?.objectId!;
@@ -188,83 +226,89 @@ export default function Arenas({ refreshKey, setRefreshKey }: RefreshProps) {
             const warriorFields = fields.warrior.fields as Hero;
 
             return (
-              <Card key={arenaId} style={{ padding: "16px" }}>
-                <Flex direction="column" gap="3">
-                  {/* Warrior Image */}
-                  <img
-                    src={warriorFields.image_url}
-                    alt={warriorFields.name}
-                    style={{
-                      width: "100%",
-                      height: "200px",
-                      objectFit: "cover",
-                      borderRadius: "8px",
-                      border: "2px solid orange",
-                    }}
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
-                  />
-
-                  {/* Battle Place Info */}
-                  <Flex direction="column" gap="2">
-                    <Flex align="center" gap="2">
-                      <Text size="5" weight="bold">
-                        {warriorFields.name}
-                      </Text>
-                      <Badge color="orange" size="2">
-                        ⚔️ Battle Ready
-                      </Badge>
-                    </Flex>
-                    <Badge color="blue" size="2">
-                      Power: {warriorFields.power}
+              <Card key={arenaId} style={arenaCardStyle}>
+                <Flex direction="column" gap="0">
+                  <Box style={{ position: "relative" }}>
+                    <img
+                      src={warriorFields.image_url}
+                      alt={warriorFields.name}
+                      style={{
+                        width: "100%",
+                        height: "220px",
+                        objectFit: "cover",
+                      }}
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                    <Badge
+                      color="orange"
+                      size="2"
+                      style={{ position: "absolute", top: "16px", left: "16px" }}
+                    >
+                      ⚔️ Battle Ready
                     </Badge>
+                  </Box>
 
-                    <Text size="3" color="gray">
-                      Owner: {fields.owner.slice(0, 6)}...
-                      {fields.owner.slice(-4)}
-                    </Text>
-                  </Flex>
-
-                  {/* Battle Options */}
-                  {account && availableHeroes.length > 0 && (
+                  <Flex direction="column" gap="3" style={{ padding: "20px" }}>
                     <Flex direction="column" gap="2">
-                      <Text size="2" weight="bold">
-                        Challenge with your hero:
-                      </Text>
-                      {availableHeroes.slice(0, 3).map((heroObj) => {
-                        const heroContent = heroObj.data?.content as any;
-                        const heroId = heroObj.data?.objectId!;
-                        const heroFields = heroContent.fields as Hero;
-                        const battleKey = `${arenaId}_${heroId}`;
-                        const isMyArena = fields.owner === account.address;
-
-                        return (
-                          <Flex key={heroId} align="center" gap="2">
-                            <Text size="2" style={{ flex: 1 }}>
-                              {heroFields.name} (Power: {heroFields.power})
-                            </Text>
-                            <Button
-                              onClick={() => handleBattle(arenaId, heroId)}
-                              disabled={isBattling[battleKey]}
-                              loading={isBattling[battleKey]}
-                              color={isMyArena ? "gray" : "orange"}
-                              size="2"
-                            >
-                              {isBattling[battleKey]
-                                ? "Battling..."
-                                : "Battle!"}
-                            </Button>
-                          </Flex>
-                        );
-                      })}
+                      <Heading size="4">{warriorFields.name}</Heading>
+                      <Flex align="center" justify="between">
+                        <Badge color="blue" size="2">
+                          Power {warriorFields.power}
+                        </Badge>
+                        <Text size="2" color="gray">
+                          Owner {fields.owner.slice(0, 6)}...{fields.owner.slice(-4)}
+                        </Text>
+                      </Flex>
                     </Flex>
-                  )}
+
+                    {account && availableHeroes.length > 0 && (
+                      <Flex direction="column" gap="2">
+                        <Text size="2" color="gray">
+                          Challenge with your hero:
+                        </Text>
+                        {availableHeroes.slice(0, 3).map((heroObj) => {
+                          const heroContent = heroObj.data?.content as any;
+                          const heroId = heroObj.data?.objectId!;
+                          const heroFields = heroContent.fields as Hero;
+                          const battleKey = `${arenaId}_${heroId}`;
+                          const isMyArena = fields.owner === account.address;
+
+                          return (
+                            <Flex
+                              key={heroId}
+                              align="center"
+                              gap="2"
+                              style={{
+                                padding: "10px 12px",
+                                borderRadius: "12px",
+                                backgroundColor: "rgba(15, 23, 42, 0.45)",
+                              }}
+                            >
+                              <Text size="2" style={{ flex: 1 }}>
+                                {heroFields.name} (Power {heroFields.power})
+                              </Text>
+                              <Button
+                                onClick={() => handleBattle(arenaId, heroId)}
+                                disabled={isBattling[battleKey]}
+                                loading={isBattling[battleKey]}
+                                color={isMyArena ? "gray" : "orange"}
+                                size="2"
+                              >
+                                {isBattling[battleKey] ? "Battling..." : "Battle"}
+                              </Button>
+                            </Flex>
+                          );
+                        })}
+                      </Flex>
+                    )}
+                  </Flex>
                 </Flex>
               </Card>
             );
           })}
-        </Grid>
+        </Box>
       )}
     </Flex>
   );
